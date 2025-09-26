@@ -234,6 +234,16 @@
             <div class="simulation-content">
                 <div class="process-forest">
                     <h3>Process Forest</h3>
+                    <div class="view-controls">
+                        <label>View Mode:</label>
+                        <select id="process-view-mode">
+                            <option value="basic">Basic Tree</option>
+                            <option value="pids">Process IDs</option>
+                            <option value="fds">File Descriptors</option>
+                            <option value="inheritance">Inheritance View</option>
+                        </select>
+                        <button id="auto-demo-btn" class="secondary-btn">Auto Demo</button>
+                    </div>
                     <div id="process-tree" class="tree-view"></div>
                 </div>
                 <div class="process-controls">
@@ -241,6 +251,12 @@
                     <button class="process-btn" id="fork-btn">Fork Process</button>
                     <button class="process-btn" id="exec-btn">Exec Program</button>
                     <button class="process-btn" id="terminate-btn">Terminate Process</button>
+                    <button class="process-btn" id="kill-parent-btn">Kill Parent (Create Orphan)</button>
+                    <div class="process-status">
+                        <h4>System Status</h4>
+                        <div id="orphan-status"></div>
+                        <div id="zombie-status"></div>
+                    </div>
                 </div>
                 <div id="process-details" class="details-panel"></div>
                 <div class="educational-info">

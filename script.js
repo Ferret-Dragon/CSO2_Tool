@@ -536,35 +536,103 @@ class CSO2Simulations {
 
     // Process Tree Explorer
     initProcessTreeExplorer() {
-        const treeView = document.getElementById('process-tree');
         const forkBtn = document.getElementById('fork-btn');
         const execBtn = document.getElementById('exec-btn');
         const terminateBtn = document.getElementById('terminate-btn');
-        const detailsPanel = document.getElementById('process-details');
+        const killParentBtn = document.getElementById('kill-parent-btn');
+        const viewModeSelect = document.getElementById('process-view-mode');
+        const autoDemoBtn = document.getElementById('auto-demo-btn');
 
+        // Initialize process data with file descriptors and inheritance info
         this.processes = [
-            { pid: 1, ppid: 0, name: 'init', status: 'running' }
+            {
+                pid: 1,
+                ppid: 0,
+                name: 'init',
+                status: 'running',
+                fds: [0, 1, 2], // stdin, stdout, stderr
+                environment: { PATH: '/bin:/usr/bin', USER: 'root' },
+                cwd: '/',
+                children: []
+            }
         ];
         this.selectedProcess = null;
         this.nextPid = 2;
+        this.viewMode = 'basic';
+        this.orphanedProcesses = [];
+        this.zombieProcesses = [];
 
-        this.renderProcessTree(treeView);
+        // Setup initial processes
+        this.setupInitialProcesses();
+        this.renderProcessTree();
 
+        // Event listeners
         forkBtn.addEventListener('click', () => this.forkProcess());
         execBtn.addEventListener('click', () => this.execProcess());
         terminateBtn.addEventListener('click', () => this.terminateProcess());
+        killParentBtn.addEventListener('click', () => this.killParentProcess());
+        viewModeSelect.addEventListener('change', (e) => {
+            this.viewMode = e.target.value;
+            this.renderProcessTree();
+        });
+        autoDemoBtn.addEventListener('click', () => this.runAutoDemo());
     }
 
-    renderProcessTree(container) {
+    setupInitialProcesses() {
+        // Create a shell process
+        const shell = {
+            pid: this.nextPid++,
+            ppid: 1,
+            name: 'bash',
+            status: 'running',
+            fds: [0, 1, 2, 3], // inherited + pipe
+            environment: { PATH: '/bin:/usr/bin', USER: 'student', HOME: '/home/student' },
+            cwd: '/home/student',
+            children: []
+        };
+        this.processes.push(shell);
+
+        // Create some child processes
+        const editor = {
+            pid: this.nextPid++,
+            ppid: shell.pid,
+            name: 'vim',
+            status: 'running',
+            fds: [0, 1, 2, 4], // inherited + file descriptor for editing
+            environment: { ...shell.environment, EDITOR: 'vim' },
+            cwd: shell.cwd,
+            children: []
+        };
+        this.processes.push(editor);
+
+        const compiler = {
+            pid: this.nextPid++,
+            ppid: shell.pid,
+            name: 'gcc',
+            status: 'running',
+            fds: [0, 1, 2, 5, 6], // inherited + input/output files
+            environment: shell.environment,
+            cwd: shell.cwd,
+            children: []
+        };
+        this.processes.push(compiler);
+    }
+
+    renderProcessTree() {
+        const container = document.getElementById('process-tree');
         const buildTree = (parentPid, level = 0) => {
             return this.processes
                 .filter(p => p.ppid === parentPid)
                 .map(process => {
-                    const indent = '  '.repeat(level);
+                    const nodeContent = this.getProcessDisplayContent(process, level);
                     const children = buildTree(process.pid, level + 1);
+                    const maxIndent = Math.min(level * 20, 200); // Limit max indentation
 
-                    return `<div class="process-node" data-pid="${process.pid}" style="margin-left: ${level * 20}px">
-                        ${indent}├─ [${process.pid}] ${process.name} (${process.status})
+                    return `<div class="process-node-wrapper" style="margin-left: ${maxIndent}px">
+                        <div class="process-node ${process.status}" data-pid="${process.pid}">
+                            <span class="process-text">${nodeContent}</span>
+                            ${process.pid !== 1 ? '<button class="terminate-btn" title="Terminate process">❌</button>' : ''}
+                        </div>
                         ${children}
                     </div>`;
                 }).join('');
@@ -572,14 +640,58 @@ class CSO2Simulations {
 
         container.innerHTML = buildTree(0);
 
+        // Add click handlers to all process nodes
         container.querySelectorAll('.process-node').forEach(node => {
-            node.addEventListener('click', () => {
+            const pid = parseInt(node.dataset.pid);
+            const process = this.processes.find(p => p.pid === pid);
+
+            // Make entire node clickable
+            node.addEventListener('click', (e) => {
+                if (e.target.classList.contains('terminate-btn')) return; // Don't select when clicking terminate button
+
                 container.querySelectorAll('.process-node').forEach(n => n.classList.remove('selected'));
                 node.classList.add('selected');
-                this.selectedProcess = this.processes.find(p => p.pid === parseInt(node.dataset.pid));
+                this.selectedProcess = process;
                 this.updateProcessDetails();
             });
         });
+
+        // Add terminate button handlers
+        container.querySelectorAll('.terminate-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const node = e.target.closest('.process-node');
+                const pid = parseInt(node.dataset.pid);
+                const process = this.processes.find(p => p.pid === pid);
+                this.terminateSpecificProcess(process);
+            });
+        });
+
+        this.updateSystemStatus();
+    }
+
+    getProcessDisplayContent(process, level) {
+        const indent = '  '.repeat(level);
+
+        switch (this.viewMode) {
+            case 'basic':
+                return `${indent}├─ [${process.pid}] ${process.name} (${process.status})`;
+
+            case 'pids':
+                return `${indent}├─ PID:${process.pid} PPID:${process.ppid} ${process.name} (${process.status})`;
+
+            case 'fds':
+                const fdList = process.fds.join(',');
+                return `${indent}├─ [${process.pid}] ${process.name} FDs:[${fdList}] (${process.status})`;
+
+            case 'inheritance':
+                const inheritedFrom = process.ppid !== 0 ? this.processes.find(p => p.pid === process.ppid) : null;
+                const inherited = inheritedFrom ? `↳ inherited: ${inheritedFrom.fds.length} FDs, env` : '';
+                return `${indent}├─ [${process.pid}] ${process.name} ${inherited} (${process.status})`;
+
+            default:
+                return `${indent}├─ [${process.pid}] ${process.name} (${process.status})`;
+        }
     }
 
     forkProcess() {
@@ -588,15 +700,21 @@ class CSO2Simulations {
             return;
         }
 
+        const parent = this.selectedProcess;
         const childProcess = {
             pid: this.nextPid++,
-            ppid: this.selectedProcess.pid,
-            name: `child_${this.selectedProcess.name}`,
-            status: 'running'
+            ppid: parent.pid,
+            name: `child_${parent.name}`,
+            status: 'running',
+            fds: [...parent.fds], // Inherit file descriptors
+            environment: { ...parent.environment }, // Copy environment
+            cwd: parent.cwd, // Inherit working directory
+            children: []
         };
 
         this.processes.push(childProcess);
-        this.renderProcessTree(document.getElementById('process-tree'));
+        this.animateProcessCreation(childProcess);
+        this.renderProcessTree();
     }
 
     execProcess() {
@@ -605,11 +723,21 @@ class CSO2Simulations {
             return;
         }
 
-        const programs = ['bash', 'vim', 'gcc', 'python', 'node'];
+        const programs = [
+            { name: 'python', fds: [0, 1, 2, 7] },
+            { name: 'node', fds: [0, 1, 2, 8, 9] },
+            { name: 'java', fds: [0, 1, 2, 10, 11, 12] },
+            { name: 'firefox', fds: [0, 1, 2, 13, 14, 15, 16] }
+        ];
+
         const newProgram = programs[Math.floor(Math.random() * programs.length)];
 
-        this.selectedProcess.name = newProgram;
-        this.renderProcessTree(document.getElementById('process-tree'));
+        // exec replaces process image but keeps PID and inheritance
+        this.selectedProcess.name = newProgram.name;
+        this.selectedProcess.fds = newProgram.fds;
+
+        this.animateProcessExec(this.selectedProcess);
+        this.renderProcessTree();
     }
 
     terminateProcess() {
@@ -617,34 +745,176 @@ class CSO2Simulations {
             alert('Cannot terminate init process!');
             return;
         }
+        this.terminateSpecificProcess(this.selectedProcess);
+    }
 
-        // Remove process and its children
-        const toRemove = [this.selectedProcess.pid];
-        let i = 0;
-        while (i < toRemove.length) {
-            const children = this.processes.filter(p => p.ppid === toRemove[i]).map(p => p.pid);
-            toRemove.push(...children);
-            i++;
+    terminateSpecificProcess(process) {
+        if (process.pid === 1) return;
+
+        // Find children of this process
+        const children = this.processes.filter(p => p.ppid === process.pid);
+
+        // Create zombie state first
+        process.status = 'zombie';
+        this.zombieProcesses.push(process.pid);
+
+        // If process has children, they become orphans (adopted by init)
+        if (children.length > 0) {
+            children.forEach(child => {
+                child.ppid = 1; // Adopted by init
+                this.orphanedProcesses.push(child.pid);
+                this.animateOrphanAdoption(child);
+            });
         }
 
-        this.processes = this.processes.filter(p => !toRemove.includes(p.pid));
-        this.selectedProcess = null;
-        this.renderProcessTree(document.getElementById('process-tree'));
+        // Simulate parent reaping after a delay
+        setTimeout(() => {
+            this.reapZombie(process.pid);
+        }, 2000);
+
+        this.renderProcessTree();
+    }
+
+    killParentProcess() {
+        if (!this.selectedProcess || this.selectedProcess.pid === 1) {
+            alert('Please select a non-init process first!');
+            return;
+        }
+
+        const parent = this.processes.find(p => p.pid === this.selectedProcess.ppid);
+        if (parent && parent.pid !== 1) {
+            this.terminateSpecificProcess(parent);
+        } else {
+            alert('Selected process has no killable parent!');
+        }
+    }
+
+    reapZombie(pid) {
+        this.processes = this.processes.filter(p => p.pid !== pid);
+        this.zombieProcesses = this.zombieProcesses.filter(z => z !== pid);
+
+        if (this.selectedProcess && this.selectedProcess.pid === pid) {
+            this.selectedProcess = null;
+        }
+
+        this.renderProcessTree();
         this.updateProcessDetails();
+    }
+
+    animateProcessCreation(process) {
+        const message = `🍴 fork() created PID ${process.pid} from parent PID ${process.ppid}`;
+        this.showProcessMessage(message, 'info');
+    }
+
+    animateProcessExec(process) {
+        const message = `🔄 exec() replaced process PID ${process.pid} with ${process.name}`;
+        this.showProcessMessage(message, 'info');
+    }
+
+    animateOrphanAdoption(process) {
+        const message = `👤 Orphan PID ${process.pid} adopted by init (PID 1)`;
+        this.showProcessMessage(message, 'warning');
+    }
+
+    showProcessMessage(message, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `process-message ${type}`;
+        messageDiv.textContent = message;
+
+        const container = document.getElementById('process-tree');
+        container.parentNode.insertBefore(messageDiv, container);
+
+        setTimeout(() => {
+            messageDiv.remove();
+        }, 3000);
+    }
+
+    updateSystemStatus() {
+        const orphanStatus = document.getElementById('orphan-status');
+        const zombieStatus = document.getElementById('zombie-status');
+
+        orphanStatus.innerHTML = this.orphanedProcesses.length > 0
+            ? `⚠️ Orphaned: ${this.orphanedProcesses.length} processes`
+            : '✅ No orphaned processes';
+
+        zombieStatus.innerHTML = this.zombieProcesses.length > 0
+            ? `🧟 Zombies: ${this.zombieProcesses.length} processes`
+            : '✅ No zombie processes';
     }
 
     updateProcessDetails() {
         const detailsPanel = document.getElementById('process-details');
         if (this.selectedProcess) {
+            const process = this.selectedProcess;
+            const parent = this.processes.find(p => p.pid === process.ppid);
+            const children = this.processes.filter(p => p.ppid === process.pid);
+
             detailsPanel.innerHTML = `
                 <h4>Process Details</h4>
-                <p><strong>PID:</strong> ${this.selectedProcess.pid}</p>
-                <p><strong>PPID:</strong> ${this.selectedProcess.ppid}</p>
-                <p><strong>Name:</strong> ${this.selectedProcess.name}</p>
-                <p><strong>Status:</strong> ${this.selectedProcess.status}</p>
+                <div class="process-info">
+                    <p><strong>PID:</strong> ${process.pid}</p>
+                    <p><strong>PPID:</strong> ${process.ppid} ${parent ? `(${parent.name})` : ''}</p>
+                    <p><strong>Name:</strong> ${process.name}</p>
+                    <p><strong>Status:</strong> <span class="status ${process.status}">${process.status}</span></p>
+                    <p><strong>Working Directory:</strong> ${process.cwd}</p>
+                    <p><strong>File Descriptors:</strong> [${process.fds.join(', ')}]</p>
+                    <p><strong>Children:</strong> ${children.length} process(es)</p>
+
+                    <h5>Environment Variables:</h5>
+                    <div class="env-vars">
+                        ${Object.entries(process.environment).map(([key, value]) =>
+                            `<div>${key}=${value}</div>`
+                        ).join('')}
+                    </div>
+
+                    ${children.length > 0 ? `
+                        <h5>Child Processes:</h5>
+                        <div class="child-list">
+                            ${children.map(child =>
+                                `<div>PID ${child.pid}: ${child.name} (${child.status})</div>`
+                            ).join('')}
+                        </div>
+                    ` : ''}
+                </div>
             `;
         } else {
-            detailsPanel.innerHTML = '<p>No process selected</p>';
+            detailsPanel.innerHTML = '<p>No process selected. Click on a process to see details.</p>';
+        }
+    }
+
+    async runAutoDemo() {
+        const demoBtn = document.getElementById('auto-demo-btn');
+        demoBtn.disabled = true;
+        demoBtn.textContent = 'Running Demo...';
+
+        try {
+            // Select shell process
+            this.selectedProcess = this.processes.find(p => p.name === 'bash');
+            this.renderProcessTree();
+
+            await this.wait(1000);
+            this.showProcessMessage('Demo: Forking a new process...', 'info');
+            this.forkProcess();
+
+            await this.wait(2000);
+            this.showProcessMessage('Demo: Killing parent to create orphan...', 'warning');
+            this.killParentProcess();
+
+            await this.wait(3000);
+            this.showProcessMessage('Demo: Switching to File Descriptor view...', 'info');
+            document.getElementById('process-view-mode').value = 'fds';
+            this.viewMode = 'fds';
+            this.renderProcessTree();
+
+            await this.wait(2000);
+            this.showProcessMessage('Demo: Switching to Inheritance view...', 'info');
+            document.getElementById('process-view-mode').value = 'inheritance';
+            this.viewMode = 'inheritance';
+            this.renderProcessTree();
+
+        } finally {
+            demoBtn.disabled = false;
+            demoBtn.textContent = 'Auto Demo';
         }
     }
 
