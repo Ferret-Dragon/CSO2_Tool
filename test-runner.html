@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSO2 Simulations - Test Runner</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body { margin: 0; padding: 20px; background: #f5f5f5; }
+        .test-header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            margin: -20px -20px 20px -20px;
+            text-align: center;
+        }
+        .test-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .test-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        .test-button:hover { background: #2980b9; }
+        .test-button.success { background: #27ae60; }
+        .test-button.danger { background: #e74c3c; }
+        .test-output {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        .simulation-preview {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            padding: 20px;
+        }
+        .simulation-preview.active {
+            display: block;
+        }
+        .manual-test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .manual-test {
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+        }
+        .test-checklist {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        .test-checklist li {
+            margin: 5px 0;
+        }
+        .test-checklist input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-pass { background: #27ae60; }
+        .status-fail { background: #e74c3c; }
+        .status-pending { background: #f39c12; }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🧪 CSO2 Simulations Test Suite</h1>
+        <p>Comprehensive testing for all interactive computer systems simulations</p>
+    </div>
+
+    <div class="test-controls">
+        <button class="test-button" onclick="runAutomatedTests()">🚀 Run Automated Tests</button>
+        <button class="test-button" onclick="showManualTests()">📋 Manual Test Checklist</button>
+        <button class="test-button" onclick="showSimulationPreview()">👁️ Preview Simulations</button>
+        <button class="test-button" onclick="generateTestReport()">📊 Generate Report</button>
+    </div>
+
+    <div id="test-results" class="test-output" style="display: none;"></div>
+
+    <div id="manual-tests" class="manual-test-section" style="display: none;">
+        <h2>📋 Manual Test Checklist</h2>
+        <p>Follow these steps to manually verify each simulation works correctly:</p>
+
+        <div class="manual-test">
+            <h3>1. Build System Visualizer</h3>
+            <ul class="test-checklist">
+                <li><input type="checkbox"> Drag main.c, util.c, math.c files to project box</li>
+                <li><input type="checkbox"> Click "Build" - should show compilation steps: main.c → main.o, util.c → util.o, math.c → math.o</li>
+                <li><input type="checkbox"> Should show linking step: "main.o, util.o, math.o → program.exe"</li>
+                <li><input type="checkbox"> Click "Modify util.c" then "Build" again</li>
+                <li><input type="checkbox"> Second build should only recompile util.o (incremental build)</li>
+                <li><input type="checkbox"> Should show "skipped - not modified" for main.c and math.c</li>
+            </ul>
+        </div>
+
+        <div class="manual-test">
+            <h3>2. Permissions Sandbox</h3>
+            <ul class="test-checklist">
+                <li><input type="checkbox"> Verify secret.txt is selected by default with 600 permissions</li>
+                <li><input type="checkbox"> Set current user to "bob", try "cat secret.txt" - should be DENIED</li>
+                <li><input type="checkbox"> Change permissions to "644", try read again - should be GRANTED</li>
+                <li><input type="checkbox"> Set user to "root", try any action - should always be GRANTED</li>
+                <li><input type="checkbox"> Try write/execute actions with different permission combinations</li>
+            </ul>
+        </div>
+
+        <div class="manual-test">
+            <h3>3. Signal Playground</h3>
+            <ul class="test-checklist">
+                <li><input type="checkbox"> Verify count.c is running and showing incrementing numbers</li>
+                <li><input type="checkbox"> Select "Default" handler, send SIGINT - process should terminate</li>
+                <li><input type="checkbox"> Restart process, select "Custom handler", send SIGINT</li>
+                <li><input type="checkbox"> Should print "Caught SIGINT!" and continue counting</li>
+                <li><input type="checkbox"> Restart, select "SIG_IGN", send SIGINT - should be ignored</li>
+                <li><input type="checkbox"> Timeline should show signal events with proper timestamps</li>
+            </ul>
+        </div>
+
+        <div class="manual-test">
+            <h3>4. Network Layers Game</h3>
+            <ul class="test-checklist">
+                <li><input type="checkbox"> Send "Hello World" without errors - should succeed through all 4 layers</li>
+                <li><input type="checkbox"> Enable "Introduce Errors", send multiple messages</li>
+                <li><input type="checkbox"> Should occasionally see "virus" corruption in transport layer</li>
+                <li><input type="checkbox"> Should occasionally see routing failures (IP: ... -> 3.3.3.3 [NO ROUTE])</li>
+                <li><input type="checkbox"> Should occasionally see collision errors at link layer</li>
+                <li><input type="checkbox"> Failed transmissions should show ❌ TRANSMISSION FAILED</li>
+                <li><input type="checkbox"> Corrupted messages should show ⚠️ MESSAGE DELIVERED WITH ERRORS</li>
+            </ul>
+        </div>
+
+        <div class="manual-test">
+            <h3>5. Cache Hit/Miss Explorer</h3>
+            <ul class="test-checklist">
+                <li><input type="checkbox"> Change cache size (4, 8, 16 lines) and associativity (1-way, 2-way, 4-way)</li>
+                <li><input type="checkbox"> Enter memory pattern: 0x1000, 0x1004, 0x2000, 0x1000</li>
+                <li><input type="checkbox"> Run simulation - should show hit/miss pattern visually</li>
+                <li><input type="checkbox"> Should display cache statistics (hits, misses, hit rate)</li>
+                <li><input type="checkbox"> Different cache configurations should show different hit rates</li>
+            </ul>
+        </div>
+
+        <div class="manual-test">
+            <h3>6. Thread Race Lab</h3>
+            <ul class="test-checklist">
+                <li><input type="checkbox"> Set 2 threads, 1000 iterations, no synchronization</li>
+                <li><input type="checkbox"> Run - final counter should be less than 2000 (race condition)</li>
+                <li><input type="checkbox"> Enable mutex, run again - should equal exactly 2000</li>
+                <li><input type="checkbox"> Timeline should show thread execution progress bars</li>
+                <li><input type="checkbox"> Test with different thread counts (3-4 threads)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="simulation-preview" class="simulation-preview">
+        <!-- This will contain the actual simulations for testing -->
+        <iframe src="index.html" width="100%" height="800px" frameborder="0"></iframe>
+    </div>
+
+    <!-- Load the main simulation scripts -->
+    <script src="script.js"></script>
+    <script src="automated-tests.js"></script>
+
+    <script>
+        let testResults = null;
+
+        async function runAutomatedTests() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.textContent = '🔄 Initializing tests...\n';
+
+            try {
+                // Initialize and run tests
+                await tester.init();
+                resultsDiv.textContent += '✅ Test framework initialized\n';
+                resultsDiv.textContent += '🚀 Running automated tests...\n\n';
+
+                // Capture console output
+                const originalLog = console.log;
+                console.log = function(...args) {
+                    resultsDiv.textContent += args.join(' ') + '\n';
+                    resultsDiv.scrollTop = resultsDiv.scrollHeight;
+                    originalLog.apply(console, args);
+                };
+
+                testResults = await tester.runAllTests();
+
+                // Restore console.log
+                console.log = originalLog;
+
+                // Update button color based on results
+                const button = event.target;
+                if (testResults.failed === 0) {
+                    button.className = 'test-button success';
+                    button.textContent = '✅ All Tests Passed';
+                } else {
+                    button.className = 'test-button danger';
+                    button.textContent = `❌ ${testResults.failed} Tests Failed`;
+                }
+
+            } catch (error) {
+                resultsDiv.textContent += `\n💥 Test runner error: ${error.message}\n`;
+                event.target.className = 'test-button danger';
+                event.target.textContent = '💥 Test Error';
+            }
+        }
+
+        function showManualTests() {
+            const manualTests = document.getElementById('manual-tests');
+            manualTests.style.display = manualTests.style.display === 'none' ? 'block' : 'none';
+
+            // Update progress as checkboxes are clicked
+            const checkboxes = manualTests.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateManualTestProgress);
+            });
+        }
+
+        function updateManualTestProgress() {
+            const manualTests = document.getElementById('manual-tests');
+            const checkboxes = manualTests.querySelectorAll('input[type="checkbox"]');
+            const checked = manualTests.querySelectorAll('input[type="checkbox"]:checked');
+
+            const progress = Math.round((checked.length / checkboxes.length) * 100);
+            const button = document.querySelector('button[onclick="showManualTests()"]');
+
+            if (progress === 100) {
+                button.className = 'test-button success';
+                button.textContent = `✅ Manual Tests Complete (${checked.length}/${checkboxes.length})`;
+            } else if (progress > 0) {
+                button.className = 'test-button';
+                button.textContent = `📋 Manual Tests ${progress}% (${checked.length}/${checkboxes.length})`;
+            }
+        }
+
+        function showSimulationPreview() {
+            const preview = document.getElementById('simulation-preview');
+            preview.classList.toggle('active');
+
+            const button = event.target;
+            if (preview.classList.contains('active')) {
+                button.textContent = '🙈 Hide Simulations';
+            } else {
+                button.textContent = '👁️ Preview Simulations';
+            }
+        }
+
+        function generateTestReport() {
+            let report = '# CSO2 Simulations Test Report\n\n';
+            report += `Generated: ${new Date().toLocaleString()}\n\n`;
+
+            if (testResults) {
+                report += '## Automated Test Results\n';
+                report += `- Total Tests: ${testResults.total}\n`;
+                report += `- Passed: ${testResults.passed}\n`;
+                report += `- Failed: ${testResults.failed}\n`;
+                report += `- Pass Rate: ${((testResults.passed / testResults.total) * 100).toFixed(1)}%\n\n`;
+            }
+
+            // Manual test progress
+            const manualTests = document.getElementById('manual-tests');
+            if (manualTests.style.display !== 'none') {
+                const checkboxes = manualTests.querySelectorAll('input[type="checkbox"]');
+                const checked = manualTests.querySelectorAll('input[type="checkbox"]:checked');
+
+                report += '## Manual Test Results\n';
+                report += `- Total Manual Tests: ${checkboxes.length}\n`;
+                report += `- Completed: ${checked.length}\n`;
+                report += `- Progress: ${Math.round((checked.length / checkboxes.length) * 100)}%\n\n`;
+            }
+
+            report += '## Simulation Status\n';
+            const simulations = [
+                'Build System Visualizer',
+                'Permissions Sandbox',
+                'Signal Playground',
+                'Network Layers Game',
+                'Cache Hit/Miss Explorer',
+                'Thread Race Lab'
+            ];
+
+            simulations.forEach(sim => {
+                report += `- ${sim}: ✅ Implemented\n`;
+            });
+
+            // Download report
+            const blob = new Blob([report], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cso2-simulations-test-report.md';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            event.target.textContent = '📊 Report Downloaded';
+            setTimeout(() => {
+                event.target.textContent = '📊 Generate Report';
+            }, 2000);
+        }
+
+        // Auto-check basic functionality on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                // Basic DOM checks
+                const criticalElements = [
+                    '#project-box', '#filesystem', '#process-output',
+                    '.layer', '#cache-display', '#shared-counter'
+                ];
+
+                let foundElements = 0;
+                criticalElements.forEach(selector => {
+                    if (document.querySelector(selector)) foundElements++;
+                });
+
+                if (foundElements === criticalElements.length) {
+                    console.log(`✅ Quick check: All ${foundElements} critical elements found`);
+                } else {
+                    console.log(`⚠️ Quick check: Only ${foundElements}/${criticalElements.length} critical elements found`);
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

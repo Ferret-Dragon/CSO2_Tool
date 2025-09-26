@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSO2 Interactive Simulations</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Computer Systems Organization 2</h1>
+        <p>Interactive Educational Simulations</p>
+    </header>
+
+    <nav class="simulation-nav">
+        <button class="nav-btn active" data-sim="build-system">Build System Visualizer</button>
+        <button class="nav-btn" data-sim="permissions">Permissions Sandbox</button>
+        <button class="nav-btn" data-sim="signals">Signal Playground</button>
+        <button class="nav-btn" data-sim="processes">Process Tree Explorer</button>
+        <button class="nav-btn" data-sim="memory">Virtual Memory Mapper</button>
+        <button class="nav-btn" data-sim="cache">Cache Hit/Miss Explorer</button>
+        <button class="nav-btn" data-sim="threads">Thread Race Lab</button>
+        <button class="nav-btn" data-sim="network">Network Layers Game</button>
+        <button class="nav-btn" data-sim="pipeline">Pipeline Builder</button>
+        <button class="nav-btn" data-sim="side-channel">Cache Side-Channel Demo</button>
+    </nav>
+
+    <main id="simulation-container">
+        <!-- Build System Visualizer -->
+        <div id="build-system" class="simulation active">
+            <div class="simulation-header">
+                <h2>Build System Visualizer</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="drag-drop-area">
+                    <h3>Project Box</h3>
+                    <div id="project-box" class="drop-zone">
+                        <p>Drag source files, headers, and libraries here</p>
+                    </div>
+                </div>
+                <div class="file-palette">
+                    <h3>Available Files</h3>
+                    <div class="file-item" draggable="true" data-type="source" data-name="main.c" data-depends="util.h">main.c (depends on util.h)</div>
+                    <div class="file-item" draggable="true" data-type="source" data-name="util.c">util.c (defines helper function)</div>
+                    <div class="file-item" draggable="true" data-type="header" data-name="util.h">util.h</div>
+                    <div class="file-item" draggable="true" data-type="source" data-name="math.c">math.c (independent)</div>
+                    <div class="file-item" draggable="true" data-type="library" data-name="libssl.so">libssl.so</div>
+                    <button id="modify-util-btn" class="secondary-btn" style="margin-top: 10px;">Modify util.c</button>
+                </div>
+                <div class="build-controls">
+                    <button id="build-btn" class="primary-btn">Build</button>
+                    <button id="clean-btn" class="secondary-btn">Clean</button>
+                </div>
+                <div id="build-visualization" class="build-viz">
+                    <h3>Build Process</h3>
+                    <div id="build-stages"></div>
+                </div>
+                <div class="educational-info">
+                    <h3>📚 Understanding the Build System</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates how source code becomes an executable program through the compilation and linking process. It shows the dependencies between files and how build systems optimize by only recompiling changed components.</p>
+
+                        <h4>Step-by-Step Process:</h4>
+                        <ol>
+                            <li><strong>Preprocessing:</strong> Header files are included, macros are expanded, and comments are removed</li>
+                            <li><strong>Compilation:</strong> Source files (.c) are translated into object files (.o) containing machine code</li>
+                            <li><strong>Assembly:</strong> Assembly language is converted to machine code and stored in object files</li>
+                            <li><strong>Linking:</strong> Object files and libraries are combined to create the final executable</li>
+                        </ol>
+
+                        <h4>Key Concepts Demonstrated:</h4>
+                        <ul>
+                            <li><strong>Dependencies:</strong> Headers must be included before compilation</li>
+                            <li><strong>Incremental Building:</strong> Only modified files need recompilation</li>
+                            <li><strong>Static vs Dynamic Libraries:</strong> .a files are embedded, .so files are linked at runtime</li>
+                            <li><strong>Build Optimization:</strong> Makefiles track dependencies to minimize rebuild time</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>By dragging files and watching the animated build process, students visualize the abstract concept of compilation. The drag-and-drop interface makes dependencies tangible, while the staged animation shows the temporal sequence of build steps that normally happen too quickly to observe.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions Sandbox -->
+        <div id="permissions" class="simulation">
+            <div class="simulation-header">
+                <h2>Permissions Sandbox</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="filesystem-view">
+                    <h3>Virtual Filesystem</h3>
+                    <div id="filesystem" class="filesystem"></div>
+                </div>
+                <div class="permission-controls">
+                    <h3>Permission Controls</h3>
+                    <div class="user-controls">
+                        <label>Current User: <select id="current-user">
+                            <option value="alice">alice (owner)</option>
+                            <option value="bob" selected>bob (not owner)</option>
+                            <option value="root">root (superuser)</option>
+                        </select></label>
+                    </div>
+                    <div class="file-controls">
+                        <h4>Modify File Permissions</h4>
+                        <label>Selected File Permissions:
+                            <select id="file-permissions">
+                                <option value="600">rw------- (owner only)</option>
+                                <option value="644">rw-r--r-- (owner write, others read)</option>
+                                <option value="755">rwxr-xr-x (owner full, others read/exec)</option>
+                                <option value="777">rwxrwxrwx (everyone full)</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="avatar-actions">
+                        <h4>Avatar Actions</h4>
+                        <button class="action-btn" data-action="read">cat secret.txt</button>
+                        <button class="action-btn" data-action="write">echo > secret.txt</button>
+                        <button class="action-btn" data-action="execute">./secret.txt</button>
+                    </div>
+                </div>
+                <div id="permission-result" class="result-display"></div>
+                <div class="educational-info">
+                    <h3>🔐 Understanding POSIX Permissions</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates Unix/Linux file permissions and access control. Students learn how the operating system determines whether a user can read, write, or execute files based on ownership and permission bits.</p>
+
+                        <h4>Step-by-Step Permission Check:</h4>
+                        <ol>
+                            <li><strong>Identity Check:</strong> System determines if you are the file owner, in the file's group, or other</li>
+                            <li><strong>Permission Category:</strong> Apply owner, group, or other permission bits accordingly</li>
+                            <li><strong>Action Validation:</strong> Check if the requested action (read=4, write=2, execute=1) is allowed</li>
+                            <li><strong>Access Decision:</strong> Grant or deny access based on the permission calculation</li>
+                        </ol>
+
+                        <h4>Key Concepts Demonstrated:</h4>
+                        <ul>
+                            <li><strong>Permission Bits:</strong> Each digit (rwx) represents read(4), write(2), execute(1) permissions</li>
+                            <li><strong>User Categories:</strong> Owner, group members, and everyone else have different access levels</li>
+                            <li><strong>Privilege Escalation:</strong> How sudo and setuid can override normal permission checks</li>
+                            <li><strong>Security Principle:</strong> Least privilege - users get minimal necessary access</li>
+                        </ul>
+
+                        <h4>Permission Examples:</h4>
+                        <ul>
+                            <li><strong>644:</strong> Owner can read/write, group/others can only read</li>
+                            <li><strong>755:</strong> Owner can read/write/execute, group/others can read/execute</li>
+                            <li><strong>600:</strong> Only owner can read/write, no access for anyone else</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>By changing user IDs and testing different actions, students experientially learn the permission system. The visual feedback (green for allowed, red for denied) makes abstract access control concrete, helping students understand why some operations fail in real systems.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signal Playground -->
+        <div id="signals" class="simulation">
+            <div class="simulation-header">
+                <h2>Signal Playground</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="process-view">
+                    <h3>Program: count.c (prints numbers forever)</h3>
+                    <div id="process-state" class="process-state">count: 1, 2, 3, 4, 5...</div>
+                    <div id="process-output" class="process-output"></div>
+                    <div class="signal-controls">
+                        <button class="signal-btn" data-signal="SIGINT">Send SIGINT (Ctrl-C)</button>
+                        <button id="restart-process" class="secondary-btn">Restart count.c</button>
+                    </div>
+                </div>
+                <div class="signal-handlers">
+                    <h3>Signal Handler Configuration</h3>
+                    <div class="handler-config">
+                        <label><input type="radio" name="sigint-action" value="default" checked> Default (terminate)</label>
+                        <label><input type="radio" name="sigint-action" value="custom"> Custom handler</label>
+                        <label><input type="radio" name="sigint-action" value="ignore"> SIG_IGN (ignore)</label>
+                    </div>
+                    <div id="custom-handler-code" class="code-display" style="display:none;">
+                        <h4>Custom Handler Code:</h4>
+                        <pre>void sigint_handler(int sig) {
+    printf("Caught SIGINT!\n");
+    // Continue counting...
+}</pre>
+                    </div>
+                </div>
+                <div id="signal-timeline" class="timeline"></div>
+                <div class="educational-info">
+                    <h3>⚡ Understanding Unix Signals</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates how Unix processes handle asynchronous events through signals. Students learn about signal delivery, handlers, and how processes can respond to interrupts, exceptions, and user-defined events.</p>
+
+                        <h4>Step-by-Step Signal Processing:</h4>
+                        <ol>
+                            <li><strong>Signal Generation:</strong> A signal is generated by the kernel, another process, or hardware exception</li>
+                            <li><strong>Signal Delivery:</strong> The kernel marks the signal as pending for the target process</li>
+                            <li><strong>Handler Check:</strong> Process checks if a custom signal handler is installed</li>
+                            <li><strong>Signal Response:</strong> Process either ignores, handles with custom code, or takes default action</li>
+                            <li><strong>Process Continuation:</strong> After handling, process resumes normal execution (if not terminated)</li>
+                        </ol>
+
+                        <h4>Key Signal Types Demonstrated:</h4>
+                        <ul>
+                            <li><strong>SIGINT:</strong> Interrupt signal (Ctrl+C) - requests graceful termination</li>
+                            <li><strong>SIGTERM:</strong> Termination signal - polite request to terminate</li>
+                            <li><strong>SIGUSR1:</strong> User-defined signal for custom application communication</li>
+                            <li><strong>SIGFPE:</strong> Floating point exception (division by zero) - synchronous signal</li>
+                        </ul>
+
+                        <h4>Handler vs No Handler:</h4>
+                        <ul>
+                            <li><strong>Without Handler:</strong> Default action occurs (usually termination)</li>
+                            <li><strong>With Handler:</strong> Custom code executes, process can continue</li>
+                            <li><strong>Race Conditions:</strong> Multiple signals can arrive quickly, creating timing issues</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>The timeline visualization shows the exact sequence of signal delivery and handler execution, making the asynchronous nature of signals visible. Students see how handlers can prevent process termination and understand the timing relationships between signals and normal program execution.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Tree Explorer -->
+        <div id="processes" class="simulation">
+            <div class="simulation-header">
+                <h2>Process Tree Explorer</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="process-forest">
+                    <h3>Process Forest</h3>
+                    <div id="process-tree" class="tree-view"></div>
+                </div>
+                <div class="process-controls">
+                    <h3>Process Operations</h3>
+                    <button class="process-btn" id="fork-btn">Fork Process</button>
+                    <button class="process-btn" id="exec-btn">Exec Program</button>
+                    <button class="process-btn" id="terminate-btn">Terminate Process</button>
+                </div>
+                <div id="process-details" class="details-panel"></div>
+                <div class="educational-info">
+                    <h3>🌲 Understanding Process Management</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates Unix process creation, management, and the parent-child relationship. Students learn how processes spawn new processes and how the operating system tracks process hierarchies.</p>
+
+                        <h4>Step-by-Step Process Operations:</h4>
+                        <ol>
+                            <li><strong>fork():</strong> Creates an identical copy of the current process (parent and child)</li>
+                            <li><strong>Process ID Assignment:</strong> Child gets new PID, parent PID becomes child's PPID</li>
+                            <li><strong>exec():</strong> Replaces process memory with new program, keeping same PID</li>
+                            <li><strong>Process Termination:</strong> Process ends, parent must reap child to prevent zombies</li>
+                            <li><strong>Inheritance:</strong> Child inherits file descriptors, environment, and other process attributes</li>
+                        </ol>
+
+                        <h4>Key Concepts Demonstrated:</h4>
+                        <ul>
+                            <li><strong>Process Tree Structure:</strong> Hierarchical parent-child relationships</li>
+                            <li><strong>PID and PPID:</strong> Process ID and Parent Process ID tracking</li>
+                            <li><strong>Process States:</strong> Running, sleeping, zombie, terminated states</li>
+                            <li><strong>Orphan Processes:</strong> When parent dies, init (PID 1) adopts children</li>
+                            <li><strong>Process Groups:</strong> Related processes can be managed together</li>
+                        </ul>
+
+                        <h4>Real-World Applications:</h4>
+                        <ul>
+                            <li><strong>Shell Commands:</strong> Each command creates a new process</li>
+                            <li><strong>Service Management:</strong> System services spawn worker processes</li>
+                            <li><strong>Parallel Processing:</strong> Fork multiple workers for concurrent tasks</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>The visual tree structure makes abstract process relationships concrete. Students can see how fork creates branches in the process tree, how exec changes process identity while maintaining hierarchy, and how termination affects the tree structure.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Virtual Memory Mapper -->
+        <div id="memory" class="simulation">
+            <div class="simulation-header">
+                <h2>Virtual Memory Mapper</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="memory-input">
+                    <h3>Address Translation</h3>
+                    <label>Virtual Address: <input type="text" id="virtual-addr" placeholder="0x1000" pattern="0x[0-9a-fA-F]+"></label>
+                    <button id="translate-btn" class="primary-btn">Translate</button>
+                </div>
+                <div class="page-table-view">
+                    <h3>Page Table</h3>
+                    <div id="page-table" class="table-display"></div>
+                </div>
+                <div class="memory-view">
+                    <h3>Physical Memory</h3>
+                    <div id="physical-memory" class="memory-grid"></div>
+                </div>
+                <div class="memory-controls">
+                    <button id="page-fault-btn" class="secondary-btn">Trigger Page Fault</button>
+                    <button id="cow-btn" class="secondary-btn">Copy-on-Write</button>
+                </div>
+                <div class="educational-info">
+                    <h3>💾 Understanding Virtual Memory</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates how virtual memory systems translate logical addresses to physical addresses using page tables. Students learn about memory abstraction, paging, and memory management optimizations.</p>
+
+                        <h4>Step-by-Step Address Translation:</h4>
+                        <ol>
+                            <li><strong>Address Parsing:</strong> Virtual address is split into page number and offset</li>
+                            <li><strong>Page Table Lookup:</strong> Page number indexes into page table to find frame number</li>
+                            <li><strong>Present Bit Check:</strong> Verify if page is currently in physical memory</li>
+                            <li><strong>Physical Address Calculation:</strong> Combine frame number with offset for final address</li>
+                            <li><strong>Memory Access:</strong> Use physical address to access actual memory location</li>
+                        </ol>
+
+                        <h4>Key Concepts Demonstrated:</h4>
+                        <ul>
+                            <li><strong>Virtual vs Physical:</strong> Programs see virtual addresses, hardware uses physical</li>
+                            <li><strong>Page Tables:</strong> Data structure mapping virtual pages to physical frames</li>
+                            <li><strong>Page Faults:</strong> Exception when accessing non-resident pages</li>
+                            <li><strong>Demand Paging:</strong> Loading pages from disk only when accessed</li>
+                            <li><strong>Copy-on-Write:</strong> Optimization for process forking and memory sharing</li>
+                        </ul>
+
+                        <h4>Memory Management Benefits:</h4>
+                        <ul>
+                            <li><strong>Process Isolation:</strong> Each process has its own virtual address space</li>
+                            <li><strong>Memory Protection:</strong> Invalid addresses cause page faults, not crashes</li>
+                            <li><strong>Efficient Memory Use:</strong> Physical memory allocated only when needed</li>
+                            <li><strong>Large Address Spaces:</strong> Programs can use more memory than physically available</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>By entering virtual addresses and watching the translation process, students visualize the abstract memory mapping. The page table and physical memory displays make the two-level addressing concrete, helping students understand why virtual memory is both powerful and complex.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Hit/Miss Explorer -->
+        <div id="cache" class="simulation">
+            <div class="simulation-header">
+                <h2>Cache Hit/Miss Explorer</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="cache-config">
+                    <h3>Cache Configuration</h3>
+                    <label>Cache Size: <select id="cache-size"><option value="4">4 lines</option><option value="8" selected>8 lines</option><option value="16">16 lines</option></select></label>
+                    <label>Associativity: <select id="associativity"><option value="1">Direct Mapped</option><option value="2" selected>2-way</option><option value="4">4-way</option></select></label>
+                </div>
+                <div class="program-input">
+                    <h3>Memory Access Pattern</h3>
+                    <textarea id="memory-pattern" placeholder="Enter memory addresses (hex), one per line:
+0x1000
+0x1004
+0x2000
+0x1000"></textarea>
+                    <button id="run-cache" class="primary-btn">Run Simulation</button>
+                </div>
+                <div id="cache-display" class="cache-visualization"></div>
+                <div id="cache-stats" class="stats-display"></div>
+                <div class="educational-info">
+                    <h3>🚀 Understanding CPU Caches</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates how CPU caches work to bridge the speed gap between fast processors and slower main memory. Students learn about cache organization, hit/miss behavior, and replacement policies.</p>
+
+                        <h4>Step-by-Step Cache Operation:</h4>
+                        <ol>
+                            <li><strong>Address Decomposition:</strong> Memory address split into tag, set index, and block offset</li>
+                            <li><strong>Set Selection:</strong> Set index determines which cache set to check</li>
+                            <li><strong>Tag Comparison:</strong> Compare address tag with tags in the selected set</li>
+                            <li><strong>Hit/Miss Decision:</strong> If tag matches and valid bit set, it's a hit; otherwise miss</li>
+                            <li><strong>Data Retrieval/Loading:</strong> On hit, return cached data; on miss, load from memory</li>
+                            <li><strong>Replacement:</strong> On miss with full cache, evict old data using replacement policy</li>
+                        </ol>
+
+                        <h4>Key Concepts Demonstrated:</h4>
+                        <ul>
+                            <li><strong>Temporal Locality:</strong> Recently accessed data likely to be accessed again soon</li>
+                            <li><strong>Spatial Locality:</strong> Data near recently accessed locations likely to be accessed</li>
+                            <li><strong>Cache Associativity:</strong> Direct-mapped (1-way) vs set-associative vs fully-associative</li>
+                            <li><strong>Cache Size Impact:</strong> Larger caches generally have better hit rates</li>
+                            <li><strong>Replacement Policies:</strong> How to choose which data to evict when cache is full</li>
+                        </ul>
+
+                        <h4>Performance Metrics:</h4>
+                        <ul>
+                            <li><strong>Hit Rate:</strong> Percentage of memory accesses found in cache</li>
+                            <li><strong>Miss Rate:</strong> Percentage requiring access to slower main memory</li>
+                            <li><strong>Average Access Time:</strong> Weighted average considering cache and memory speeds</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>Students can experiment with different cache configurations and access patterns to see real-time hit/miss behavior. The visual feedback shows why certain access patterns perform better, making abstract performance concepts tangible through immediate visual and statistical feedback.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thread Race Lab -->
+        <div id="threads" class="simulation">
+            <div class="simulation-header">
+                <h2>Thread Race Lab</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="thread-config">
+                    <h3>Thread Configuration</h3>
+                    <label>Number of Threads: <input type="number" id="thread-count" value="2" min="1" max="4"></label>
+                    <label>Iterations per Thread: <input type="number" id="iterations" value="1000" min="1"></label>
+                </div>
+                <div class="sync-controls">
+                    <h3>Synchronization</h3>
+                    <label><input type="checkbox" id="use-mutex"> Use Mutex</label>
+                    <label><input type="checkbox" id="use-barrier"> Use Barrier</label>
+                    <label><input type="checkbox" id="use-semaphore"> Use Semaphore</label>
+                </div>
+                <div class="thread-execution">
+                    <button id="start-threads" class="primary-btn">Start Threads</button>
+                    <div id="shared-counter" class="counter-display">Shared Counter: 0</div>
+                </div>
+                <div id="thread-timeline" class="thread-timeline"></div>
+                <div class="educational-info">
+                    <h3>🧠 Understanding Thread Synchronization</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates race conditions in multi-threaded programs and how synchronization primitives solve concurrency problems. Students learn why shared data access needs careful coordination.</p>
+
+                        <h4>Step-by-Step Race Condition:</h4>
+                        <ol>
+                            <li><strong>Thread Creation:</strong> Multiple threads created to increment shared counter</li>
+                            <li><strong>Concurrent Access:</strong> Threads simultaneously read current counter value</li>
+                            <li><strong>Local Computation:</strong> Each thread increments its local copy</li>
+                            <li><strong>Write-Back:</strong> Threads write incremented values back to shared memory</li>
+                            <li><strong>Lost Updates:</strong> Without synchronization, some increments are lost</li>
+                        </ol>
+
+                        <h4>Synchronization Mechanisms:</h4>
+                        <ul>
+                            <li><strong>Mutex (Mutual Exclusion):</strong> Ensures only one thread accesses critical section</li>
+                            <li><strong>Semaphore:</strong> Allows controlled number of threads to access resource</li>
+                            <li><strong>Barrier:</strong> Forces threads to wait until all reach synchronization point</li>
+                            <li><strong>Atomic Operations:</strong> Indivisible read-modify-write operations</li>
+                        </ul>
+
+                        <h4>Key Concepts Demonstrated:</h4>
+                        <ul>
+                            <li><strong>Race Conditions:</strong> Outcome depends on unpredictable thread execution timing</li>
+                            <li><strong>Critical Sections:</strong> Code regions that must execute atomically</li>
+                            <li><strong>Deadlock:</strong> Two or more threads waiting for each other indefinitely</li>
+                            <li><strong>Performance vs Safety:</strong> Synchronization prevents races but reduces parallelism</li>
+                        </ul>
+
+                        <h4>Expected vs Actual Results:</h4>
+                        <ul>
+                            <li><strong>Without Mutex:</strong> Final counter often less than expected due to lost updates</li>
+                            <li><strong>With Mutex:</strong> Final counter equals expected value (threads × iterations)</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>Students see race conditions in action - the "broken" behavior without synchronization makes the abstract concept concrete. The timeline visualization shows thread execution overlap, helping students understand why timing-dependent bugs are so difficult to reproduce and debug.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Layers Game -->
+        <div id="network" class="simulation">
+            <div class="simulation-header">
+                <h2>Network Layers Game</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="message-input">
+                    <h3>Message to Send</h3>
+                    <input type="text" id="network-message" placeholder="Enter your message" value="Hello World">
+                    <button id="send-message" class="primary-btn">Send Message</button>
+                </div>
+                <div class="network-stack">
+                    <div class="layer" id="application-layer">
+                        <h4>Application Layer</h4>
+                        <div class="layer-content"></div>
+                    </div>
+                    <div class="layer" id="transport-layer">
+                        <h4>Transport Layer</h4>
+                        <div class="layer-content"></div>
+                    </div>
+                    <div class="layer" id="network-layer">
+                        <h4>Network Layer</h4>
+                        <div class="layer-content"></div>
+                    </div>
+                    <div class="layer" id="link-layer">
+                        <h4>Link Layer</h4>
+                        <div class="layer-content"></div>
+                    </div>
+                </div>
+                <div class="network-controls">
+                    <label><input type="checkbox" id="introduce-errors"> Introduce Errors</label>
+                    <label><input type="checkbox" id="enable-encryption"> Enable Encryption</label>
+                </div>
+                <div class="educational-info">
+                    <h3>🌐 Understanding Network Protocol Layers</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates the OSI network model and how data is encapsulated as it travels down the protocol stack. Students learn how each layer adds headers and handles different networking responsibilities.</p>
+
+                        <h4>Step-by-Step Message Encapsulation:</h4>
+                        <ol>
+                            <li><strong>Application Layer:</strong> User data formatted for network transmission (HTTP, encryption)</li>
+                            <li><strong>Transport Layer:</strong> Adds reliability, flow control, and port information (TCP headers)</li>
+                            <li><strong>Network Layer:</strong> Adds routing information with source and destination IP addresses</li>
+                            <li><strong>Link Layer:</strong> Adds physical addressing (MAC addresses) for local network delivery</li>
+                            <li><strong>Physical Transmission:</strong> Bits transmitted over physical medium (cable, wireless)</li>
+                        </ol>
+
+                        <h4>Key Concepts Demonstrated:</h4>
+                        <ul>
+                            <li><strong>Protocol Encapsulation:</strong> Each layer wraps previous layer's data with its own header</li>
+                            <li><strong>Layer Separation:</strong> Each layer has specific responsibilities and interfaces</li>
+                            <li><strong>Header Information:</strong> Control data needed for proper message delivery</li>
+                            <li><strong>Error Handling:</strong> How layers detect and respond to transmission errors</li>
+                            <li><strong>Security:</strong> Encryption can be applied at different layers</li>
+                        </ul>
+
+                        <h4>Layer Responsibilities:</h4>
+                        <ul>
+                            <li><strong>Application:</strong> User interface, data formatting, encryption</li>
+                            <li><strong>Transport:</strong> Reliable delivery, flow control, port multiplexing</li>
+                            <li><strong>Network:</strong> Routing, logical addressing, path determination</li>
+                            <li><strong>Link:</strong> Physical addressing, error detection, frame formatting</li>
+                        </ul>
+
+                        <h4>Error Scenarios:</h4>
+                        <ul>
+                            <li><strong>Lost Packets:</strong> Transport layer detects and retransmits</li>
+                            <li><strong>Incorrect Addresses:</strong> Network layer routing failures</li>
+                            <li><strong>Corruption:</strong> Link layer checksums detect bit errors</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>Watching the message get "wrapped" in headers at each layer makes abstract networking protocols concrete. Students see how the simple message becomes a complex packet, understanding why network programming involves so many layers and why debugging network issues requires understanding the entire stack.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline Builder -->
+        <div id="pipeline" class="simulation">
+            <div class="simulation-header">
+                <h2>Pipeline Builder</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="instruction-input">
+                    <h3>Instructions</h3>
+                    <textarea id="instruction-list" placeholder="Enter assembly instructions:
+ADD R1, R2, R3
+LDR R4, [R1]
+SUB R5, R4, #1"></textarea>
+                    <button id="execute-pipeline" class="primary-btn">Execute Pipeline</button>
+                </div>
+                <div class="pipeline-stages">
+                    <div class="stage">Fetch</div>
+                    <div class="stage">Decode</div>
+                    <div class="stage">Execute</div>
+                    <div class="stage">Memory</div>
+                    <div class="stage">Writeback</div>
+                </div>
+                <div id="pipeline-timeline" class="pipeline-display"></div>
+                <div class="pipeline-controls">
+                    <label><input type="checkbox" id="enable-forwarding"> Enable Forwarding</label>
+                    <label><input type="checkbox" id="enable-branch-prediction"> Branch Prediction</label>
+                    <label><input type="checkbox" id="out-of-order"> Out-of-Order Execution</label>
+                </div>
+                <div class="educational-info">
+                    <h3>🔄 Understanding CPU Pipelining</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates how modern CPUs use instruction pipelining to increase throughput by overlapping instruction execution. Students learn about pipeline stages, hazards, and optimization techniques.</p>
+
+                        <h4>Step-by-Step Pipeline Execution:</h4>
+                        <ol>
+                            <li><strong>Fetch (F):</strong> Instruction loaded from memory using program counter</li>
+                            <li><strong>Decode (D):</strong> Instruction parsed, operands identified, control signals generated</li>
+                            <li><strong>Execute (E):</strong> Arithmetic/logic operations performed, addresses calculated</li>
+                            <li><strong>Memory (M):</strong> Data loaded from or stored to memory if needed</li>
+                            <li><strong>Writeback (W):</strong> Results written back to registers or memory</li>
+                        </ol>
+
+                        <h4>Pipeline Benefits:</h4>
+                        <ul>
+                            <li><strong>Increased Throughput:</strong> Multiple instructions in different stages simultaneously</li>
+                            <li><strong>Better Resource Utilization:</strong> Different pipeline stages use different CPU components</li>
+                            <li><strong>Improved Performance:</strong> Ideally one instruction completes per clock cycle</li>
+                        </ul>
+
+                        <h4>Pipeline Hazards Demonstrated:</h4>
+                        <ul>
+                            <li><strong>Data Hazards:</strong> Instruction needs result from previous instruction still in pipeline</li>
+                            <li><strong>Structural Hazards:</strong> Hardware resource conflicts between instructions</li>
+                            <li><strong>Control Hazards:</strong> Branch instructions change program flow unpredictably</li>
+                        </ul>
+
+                        <h4>Optimization Techniques:</h4>
+                        <ul>
+                            <li><strong>Forwarding/Bypassing:</strong> Send results directly between stages without waiting</li>
+                            <li><strong>Branch Prediction:</strong> Guess branch outcomes to avoid pipeline stalls</li>
+                            <li><strong>Out-of-Order Execution:</strong> Execute independent instructions out of sequence</li>
+                            <li><strong>Register Renaming:</strong> Eliminate false dependencies between instructions</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>The timeline visualization shows how instructions flow through pipeline stages in parallel, making the abstract concept of overlapped execution concrete. Students see how hazards cause stalls and how optimizations restore smooth flow, understanding why modern CPU design is so complex.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Side-Channel Demo -->
+        <div id="side-channel" class="simulation">
+            <div class="simulation-header">
+                <h2>Cache Side-Channel Demo</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="victim-program">
+                    <h3>Victim Program</h3>
+                    <label>Secret Data: <input type="text" id="secret-data" value="SECRET123" maxlength="8"></label>
+                    <button id="run-victim" class="primary-btn">Run Victim</button>
+                </div>
+                <div class="attacker-program">
+                    <h3>Attacker Program</h3>
+                    <button id="run-attacker" class="secondary-btn">Measure Cache Timing</button>
+                    <div id="timing-chart" class="timing-display"></div>
+                </div>
+                <div class="mitigation-controls">
+                    <h3>Mitigations</h3>
+                    <label><input type="checkbox" id="constant-time"> Constant-Time Operations</label>
+                    <label><input type="checkbox" id="cache-flushing"> Cache Flushing</label>
+                </div>
+                <div class="educational-info">
+                    <h3>🔍 Understanding Side-Channel Attacks</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This simulation demonstrates cache-based side-channel attacks, where sensitive information leaks through timing differences in memory access patterns. Students learn how hardware optimizations can create security vulnerabilities.</p>
+
+                        <h4>Step-by-Step Side-Channel Attack:</h4>
+                        <ol>
+                            <li><strong>Victim Execution:</strong> Target program processes secret data, accessing specific memory locations</li>
+                            <li><strong>Cache State Change:</strong> Secret-dependent memory accesses modify cache contents</li>
+                            <li><strong>Attacker Probing:</strong> Attacker measures access time to different memory locations</li>
+                            <li><strong>Timing Analysis:</strong> Faster access times indicate data was cached (accessed by victim)</li>
+                            <li><strong>Secret Inference:</strong> Timing patterns reveal information about victim's secret data</li>
+                        </ol>
+
+                        <h4>Why This Attack Works:</h4>
+                        <ul>
+                            <li><strong>Shared Cache:</strong> Multiple processes share the same cache hardware</li>
+                            <li><strong>Timing Differences:</strong> Cache hits (~50ns) vs cache misses (~150ns)</li>
+                            <li><strong>Data-Dependent Access:</strong> Program accesses memory based on secret values</li>
+                            <li><strong>Observable Side Effects:</strong> Cache state changes are externally measurable</li>
+                        </ul>
+
+                        <h4>Attack Types:</h4>
+                        <ul>
+                            <li><strong>Prime+Probe:</strong> Attacker fills cache, victim runs, attacker checks what was evicted</li>
+                            <li><strong>Flush+Reload:</strong> Attacker flushes cache lines, victim runs, attacker times reloads</li>
+                            <li><strong>Evict+Time:</strong> Attacker evicts data, measures victim's access time</li>
+                        </ul>
+
+                        <h4>Mitigation Strategies:</h4>
+                        <ul>
+                            <li><strong>Constant-Time Algorithms:</strong> Ensure execution time doesn't depend on secret data</li>
+                            <li><strong>Cache Flushing:</strong> Clear cache state to prevent information leakage</li>
+                            <li><strong>Noise Injection:</strong> Add random delays to mask timing patterns</li>
+                            <li><strong>Cache Partitioning:</strong> Isolate processes in separate cache regions</li>
+                        </ul>
+
+                        <h4>Real-World Impact:</h4>
+                        <ul>
+                            <li><strong>Cryptographic Keys:</strong> AES, RSA keys leaked through cache timing</li>
+                            <li><strong>Browser Security:</strong> Cross-site attacks via JavaScript timing</li>
+                            <li><strong>Cloud Computing:</strong> VM-to-VM attacks in shared infrastructure</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>Students see how subtle timing differences can reveal sensitive information, making abstract side-channel concepts concrete. The mitigation toggles demonstrate how defenses work, helping students understand the ongoing tension between performance optimization and security in computer systems.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <script src="script.js"></script>
+</body>
+</html>
