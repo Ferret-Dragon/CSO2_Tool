@@ -8,8 +8,11 @@
 </head>
 <body>
     <header>
-        <h1>Computer Systems Organization 2</h1>
-        <p>Interactive Educational Simulations</p>
+        <img src="lynx_logo.png" alt="Lynx Logo" class="header-logo">
+        <div>
+            <h1>Computer Systems Organization 2</h1>
+            <p>Interactive Educational Simulations</p>
+        </div>
     </header>
 
     <nav class="simulation-nav">
@@ -23,6 +26,7 @@
         <button class="nav-btn" data-sim="network">Network Layers Game</button>
         <button class="nav-btn" data-sim="pipeline">Pipeline Builder</button>
         <button class="nav-btn" data-sim="side-channel">Cache Side-Channel Demo</button>
+        <button class="nav-btn" data-sim="timing">Signal Relay Race</button>
     </nav>
 
     <main id="simulation-container">
@@ -704,6 +708,119 @@ SUB R5, R4, #1"></textarea>
 
                         <h4>How the Simulation Helps:</h4>
                         <p>Students see how subtle timing differences can reveal sensitive information, making abstract side-channel concepts concrete. The mitigation toggles demonstrate how defenses work, helping students understand the ongoing tension between performance optimization and security in computer systems.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signal Relay Race with Stopwatch -->
+        <div id="timing" class="simulation">
+            <div class="simulation-header">
+                <h2>Signal Relay Race with Stopwatch</h2>
+            </div>
+            <div class="simulation-content">
+                <div class="timing-controls">
+                    <h3>Race Configuration</h3>
+                    <div class="timing-settings">
+                        <label>Optimization Level:
+                            <select id="optimization-level">
+                                <option value="O0">-O0 (No optimization)</option>
+                                <option value="O2">-O2 (Standard optimization)</option>
+                                <option value="O3">-O3 (Aggressive optimization)</option>
+                            </select>
+                        </label>
+                        <label>Handler Work:
+                            <select id="handler-work">
+                                <option value="minimal">Minimal (timing only)</option>
+                                <option value="medium">Medium (some processing)</option>
+                                <option value="heavy">Heavy (lots of work)</option>
+                            </select>
+                        </label>
+                        <label>Number of Signals:
+                            <input type="number" id="signal-count" value="5" min="1" max="20">
+                        </label>
+                    </div>
+                    <div class="race-buttons">
+                        <button id="start-stopwatch" class="primary-btn">Start Stopwatch Test</button>
+                        <button id="start-signal-relay" class="primary-btn">Start Signal Relay</button>
+                        <button id="start-process-relay" class="primary-btn">Parent-Child Relay</button>
+                        <button id="run-comparison" class="secondary-btn">Compare All</button>
+                    </div>
+                </div>
+
+                <div class="timing-display">
+                    <h3>Timing Results</h3>
+                    <div id="timing-results" class="results-panel">
+                        <div class="timing-chart">
+                            <canvas id="timing-chart" width="400" height="300"></canvas>
+                        </div>
+                        <div class="timing-stats">
+                            <div class="stat-box">
+                                <h4>Function Call Timing</h4>
+                                <div id="function-timing">No data yet</div>
+                            </div>
+                            <div class="stat-box">
+                                <h4>Signal Latency</h4>
+                                <div id="signal-timing">No data yet</div>
+                            </div>
+                            <div class="stat-box">
+                                <h4>Process Communication</h4>
+                                <div id="process-timing">No data yet</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relay-visualization">
+                    <h3>Signal Relay Race</h3>
+                    <div id="relay-track" class="track">
+                        <div class="runner" id="signal-runner">🏃‍♂️</div>
+                        <div class="baton" id="signal-baton">🔴</div>
+                        <div class="finish-line">🏁</div>
+                    </div>
+                    <div class="stopwatch">
+                        <div class="stopwatch-display">
+                            <span id="stopwatch-time">0.000000</span>
+                            <span class="time-unit">seconds</span>
+                        </div>
+                        <div id="timing-log" class="timing-log"></div>
+                    </div>
+                </div>
+
+                <div class="educational-info">
+                    <h3>⏱️ Understanding System Timing</h3>
+                    <div class="concept-explanation">
+                        <h4>What This Simulation Teaches:</h4>
+                        <p>This activity demonstrates real-world timing measurements in systems programming. Students learn to use high-precision timing APIs and understand how compiler optimizations and system calls affect performance.</p>
+
+                        <h4>Step-by-Step Timing Concepts:</h4>
+                        <ol>
+                            <li><strong>clock_gettime():</strong> High-precision timing API that measures nanoseconds</li>
+                            <li><strong>struct timespec:</strong> Data structure holding seconds and nanoseconds</li>
+                            <li><strong>Signal Latency:</strong> Time taken for signal delivery and handler execution</li>
+                            <li><strong>Compiler Optimization:</strong> How -O0, -O2, -O3 affect timing performance</li>
+                            <li><strong>System Call Overhead:</strong> Cost of kernel transitions vs pure function calls</li>
+                        </ol>
+
+                        <h4>Key Concepts Demonstrated:</h4>
+                        <ul>
+                            <li><strong>Timing Precision:</strong> Nanosecond-level measurement capabilities</li>
+                            <li><strong>Signal Handling:</strong> SIGUSR1 delivery timing and handler overhead</li>
+                            <li><strong>Process Communication:</strong> Parent-child signal round-trip timing</li>
+                            <li><strong>Optimization Effects:</strong> How compiler flags change execution speed</li>
+                            <li><strong>Handler Complexity:</strong> Impact of work done inside signal handlers</li>
+                        </ul>
+
+                        <h4>Real-World Applications:</h4>
+                        <ul>
+                            <li><strong>Performance Profiling:</strong> Measuring bottlenecks in real applications</li>
+                            <li><strong>Real-Time Systems:</strong> Meeting strict timing deadlines</li>
+                            <li><strong>System Optimization:</strong> Understanding where time is spent</li>
+                            <li><strong>Benchmarking:</strong> Comparing different implementation approaches</li>
+                        </ul>
+
+                        <h4>How the Simulation Helps:</h4>
+                        <p>By visualizing timing as a relay race, students can see abstract timing concepts. The stopwatch metaphor makes nanosecond measurements tangible, while the interactive controls let students experiment with real factors that affect system performance.</p>
                     </div>
                 </div>
             </div>

@@ -17,6 +17,7 @@ class CSO2Simulations {
         this.initNetworkLayersGame();
         this.initPipelineBuilder();
         this.initSideChannelDemo();
+        this.initSignalRelayRace();
     }
 
     setupNavigation() {
@@ -1554,6 +1555,377 @@ class CSO2Simulations {
             timingChart.innerHTML += '<p style="color: #e74c3c; font-weight: bold;">⚠️ Secret data leaked through timing differences!</p>';
         } else {
             timingChart.innerHTML += '<p style="color: #27ae60; font-weight: bold;">✓ Mitigations active - timing attack prevented.</p>';
+        }
+    }
+
+    // Signal Relay Race with Stopwatch
+    initSignalRelayRace() {
+        const startStopwatchBtn = document.getElementById('start-stopwatch');
+        const startSignalRelayBtn = document.getElementById('start-signal-relay');
+        const startProcessRelayBtn = document.getElementById('start-process-relay');
+        const runComparisonBtn = document.getElementById('run-comparison');
+        const optimizationSelect = document.getElementById('optimization-level');
+        const handlerWorkSelect = document.getElementById('handler-work');
+        const signalCountInput = document.getElementById('signal-count');
+
+        // Initialize timing data storage
+        this.timingData = {
+            functionCalls: [],
+            signalLatency: [],
+            processComm: []
+        };
+
+        // Set up event listeners
+        startStopwatchBtn.addEventListener('click', () => this.runStopwatchTest());
+        startSignalRelayBtn.addEventListener('click', () => this.runSignalRelay());
+        startProcessRelayBtn.addEventListener('click', () => this.runProcessRelay());
+        runComparisonBtn.addEventListener('click', () => this.runComparisonTest());
+    }
+
+    async runStopwatchTest() {
+        const optimization = document.getElementById('optimization-level').value;
+        const handlerWork = document.getElementById('handler-work').value;
+
+        this.updateStopwatch('Starting function call timing test...');
+        this.logTiming('🏁 Starting Stopwatch Test');
+
+        // Simulate clock_gettime() measurements
+        const results = [];
+        for (let i = 0; i < 10; i++) {
+            const start = performance.now();
+
+            // Simulate different optimization levels
+            this.simulateFunction(optimization, handlerWork);
+
+            const end = performance.now();
+            const elapsed = (end - start) * 1000; // Convert to microseconds
+            results.push(elapsed);
+
+            this.animateRunner(i / 10);
+            await this.wait(100);
+        }
+
+        const avgTime = results.reduce((a, b) => a + b) / results.length;
+        const minTime = Math.min(...results);
+        const maxTime = Math.max(...results);
+
+        this.timingData.functionCalls = results;
+        this.updateFunctionTiming(avgTime, minTime, maxTime, optimization);
+        this.updateStopwatch(avgTime.toFixed(6));
+        this.logTiming(`📊 Function calls: ${avgTime.toFixed(3)}μs average (${optimization})`);
+
+        this.drawTimingChart();
+    }
+
+    async runSignalRelay() {
+        const optimization = document.getElementById('optimization-level').value;
+        const handlerWork = document.getElementById('handler-work').value;
+        const signalCount = parseInt(document.getElementById('signal-count').value);
+
+        this.updateStopwatch('Starting signal relay race...');
+        this.logTiming('🚨 Starting Signal Relay');
+
+        const results = [];
+        for (let i = 0; i < signalCount; i++) {
+            const start = performance.now();
+
+            // Simulate signal send, delivery, and handler execution
+            await this.simulateSignalDelivery(optimization, handlerWork);
+
+            const end = performance.now();
+            const elapsed = (end - start) * 1000; // Convert to microseconds
+            results.push(elapsed);
+
+            this.animateBaton(i / signalCount);
+            this.logTiming(`Signal ${i + 1}: ${elapsed.toFixed(3)}μs`);
+
+            await this.wait(200);
+        }
+
+        const avgTime = results.reduce((a, b) => a + b) / results.length;
+        const minTime = Math.min(...results);
+        const maxTime = Math.max(...results);
+
+        this.timingData.signalLatency = results;
+        this.updateSignalTiming(avgTime, minTime, maxTime, optimization, handlerWork);
+        this.updateStopwatch(avgTime.toFixed(6));
+        this.logTiming(`📊 Signal latency: ${avgTime.toFixed(3)}μs average`);
+
+        this.drawTimingChart();
+    }
+
+    async runProcessRelay() {
+        const optimization = document.getElementById('optimization-level').value;
+        const handlerWork = document.getElementById('handler-work').value;
+
+        this.updateStopwatch('Starting parent-child relay...');
+        this.logTiming('👨‍👦 Starting Process Communication');
+
+        const results = [];
+        for (let i = 0; i < 5; i++) {
+            const start = performance.now();
+
+            // Simulate parent->child->parent signal round trip
+            await this.simulateProcessCommunication(optimization, handlerWork);
+
+            const end = performance.now();
+            const elapsed = (end - start) * 1000; // Convert to microseconds
+            results.push(elapsed);
+
+            this.animateFullRelay(i / 5);
+            this.logTiming(`Round trip ${i + 1}: ${elapsed.toFixed(3)}μs`);
+
+            await this.wait(400);
+        }
+
+        const avgTime = results.reduce((a, b) => a + b) / results.length;
+        const minTime = Math.min(...results);
+        const maxTime = Math.max(...results);
+
+        this.timingData.processComm = results;
+        this.updateProcessTiming(avgTime, minTime, maxTime, optimization, handlerWork);
+        this.updateStopwatch(avgTime.toFixed(6));
+        this.logTiming(`📊 Process communication: ${avgTime.toFixed(3)}μs average`);
+
+        this.drawTimingChart();
+    }
+
+    async runComparisonTest() {
+        this.logTiming('🔄 Running full comparison across optimization levels...');
+
+        const originalOptimization = document.getElementById('optimization-level').value;
+        const optimizationLevels = ['O0', 'O2', 'O3'];
+
+        for (const opt of optimizationLevels) {
+            document.getElementById('optimization-level').value = opt;
+            this.logTiming(`\n--- Testing with ${opt} ---`);
+
+            await this.runStopwatchTest();
+            await this.wait(500);
+            await this.runSignalRelay();
+            await this.wait(500);
+        }
+
+        document.getElementById('optimization-level').value = originalOptimization;
+        this.logTiming('🎯 Comparison complete! Check timing differences above.');
+    }
+
+    simulateFunction(optimization, handlerWork) {
+        // Simulate different optimization levels affecting timing
+        let baseTime = 1.0;
+
+        switch (optimization) {
+            case 'O0':
+                baseTime *= 3.5; // No optimization - slower
+                break;
+            case 'O2':
+                baseTime *= 1.2; // Some optimization
+                break;
+            case 'O3':
+                baseTime *= 0.8; // Aggressive optimization - faster
+                break;
+        }
+
+        // Simulate work based on handler complexity
+        switch (handlerWork) {
+            case 'minimal':
+                baseTime *= 1.0;
+                break;
+            case 'medium':
+                baseTime *= 2.5;
+                break;
+            case 'heavy':
+                baseTime *= 8.0;
+                break;
+        }
+
+        // Add some random variation to simulate real-world timing
+        const variation = (Math.random() - 0.5) * 0.3;
+        return baseTime * (1 + variation);
+    }
+
+    async simulateSignalDelivery(optimization, handlerWork) {
+        // Simulate signal overhead + handler execution
+        const kernelOverhead = 10 + Math.random() * 5; // Base kernel overhead
+        const handlerTime = this.simulateFunction(optimization, handlerWork);
+
+        await this.wait(kernelOverhead + handlerTime);
+        return kernelOverhead + handlerTime;
+    }
+
+    async simulateProcessCommunication(optimization, handlerWork) {
+        // Simulate parent->child->parent round trip
+        const signal1 = await this.simulateSignalDelivery(optimization, handlerWork);
+        const signal2 = await this.simulateSignalDelivery(optimization, handlerWork);
+        const contextSwitchOverhead = 5 + Math.random() * 3;
+
+        return signal1 + signal2 + contextSwitchOverhead;
+    }
+
+    updateStopwatch(time) {
+        const stopwatchDisplay = document.getElementById('stopwatch-time');
+        if (typeof time === 'string') {
+            stopwatchDisplay.textContent = time;
+        } else {
+            stopwatchDisplay.textContent = (time / 1000).toFixed(6); // Convert μs to ms
+        }
+    }
+
+    logTiming(message) {
+        const log = document.getElementById('timing-log');
+        const timestamp = new Date().toLocaleTimeString();
+        log.innerHTML += `<div class="log-entry">[${timestamp}] ${message}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+
+    updateFunctionTiming(avg, min, max, optimization) {
+        const display = document.getElementById('function-timing');
+        display.innerHTML = `
+            <div class="timing-result">
+                <strong>Optimization: ${optimization}</strong><br>
+                Average: ${avg.toFixed(3)}μs<br>
+                Range: ${min.toFixed(3)}μs - ${max.toFixed(3)}μs<br>
+                <div class="optimization-impact">
+                    ${this.getOptimizationDescription(optimization)}
+                </div>
+            </div>
+        `;
+    }
+
+    updateSignalTiming(avg, min, max, optimization, handlerWork) {
+        const display = document.getElementById('signal-timing');
+        display.innerHTML = `
+            <div class="timing-result">
+                <strong>Config: ${optimization} + ${handlerWork} work</strong><br>
+                Average: ${avg.toFixed(3)}μs<br>
+                Range: ${min.toFixed(3)}μs - ${max.toFixed(3)}μs<br>
+                <div class="signal-breakdown">
+                    Kernel overhead + Handler execution
+                </div>
+            </div>
+        `;
+    }
+
+    updateProcessTiming(avg, min, max, optimization, handlerWork) {
+        const display = document.getElementById('process-timing');
+        display.innerHTML = `
+            <div class="timing-result">
+                <strong>Round-trip: ${optimization} + ${handlerWork}</strong><br>
+                Average: ${avg.toFixed(3)}μs<br>
+                Range: ${min.toFixed(3)}μs - ${max.toFixed(3)}μs<br>
+                <div class="process-breakdown">
+                    2x signal delivery + context switches
+                </div>
+            </div>
+        `;
+    }
+
+    getOptimizationDescription(optimization) {
+        switch (optimization) {
+            case 'O0':
+                return '🐌 No optimization - debug builds, slower execution';
+            case 'O2':
+                return '⚡ Standard optimization - balanced performance';
+            case 'O3':
+                return '🚀 Aggressive optimization - maximum performance';
+            default:
+                return '';
+        }
+    }
+
+    animateRunner(progress) {
+        const runner = document.getElementById('signal-runner');
+        const track = document.getElementById('relay-track');
+        const trackWidth = track.offsetWidth - 50; // Account for runner width
+        runner.style.left = `${progress * trackWidth}px`;
+    }
+
+    animateBaton(progress) {
+        const baton = document.getElementById('signal-baton');
+        const track = document.getElementById('relay-track');
+        const trackWidth = track.offsetWidth - 20; // Account for baton width
+        baton.style.left = `${progress * trackWidth}px`;
+
+        // Add pulsing effect during signal transmission
+        baton.style.transform = `scale(${1 + Math.sin(progress * 10) * 0.2})`;
+    }
+
+    animateFullRelay(progress) {
+        // Animate both runner and baton for process communication
+        this.animateRunner(progress);
+        this.animateBaton(progress);
+
+        // Add visual effects for round-trip communication
+        const track = document.getElementById('relay-track');
+        if (progress > 0.5) {
+            track.style.background = 'linear-gradient(90deg, #27ae60 0%, #3498db 50%, #e74c3c 100%)';
+        } else {
+            track.style.background = 'linear-gradient(90deg, #3498db 0%, #27ae60 100%)';
+        }
+    }
+
+    drawTimingChart() {
+        const canvas = document.getElementById('timing-chart');
+        const ctx = canvas.getContext('2d');
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw chart background
+        ctx.fillStyle = '#ecf0f1';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw title
+        ctx.fillStyle = '#2c3e50';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Timing Comparison', canvas.width / 2, 20);
+
+        // Draw bars for different timing types
+        const barWidth = 60;
+        const barSpacing = 80;
+        const startX = 50;
+        const maxHeight = 200;
+
+        // Function calls
+        if (this.timingData.functionCalls.length > 0) {
+            const avgFunction = this.timingData.functionCalls.reduce((a, b) => a + b) / this.timingData.functionCalls.length;
+            const height = (avgFunction / 1000) * maxHeight; // Scale to fit
+
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(startX, canvas.height - height - 30, barWidth, height);
+
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Function', startX + barWidth / 2, canvas.height - 10);
+            ctx.fillText(`${avgFunction.toFixed(1)}μs`, startX + barWidth / 2, canvas.height - height - 35);
+        }
+
+        // Signal latency
+        if (this.timingData.signalLatency.length > 0) {
+            const avgSignal = this.timingData.signalLatency.reduce((a, b) => a + b) / this.timingData.signalLatency.length;
+            const height = (avgSignal / 1000) * maxHeight;
+
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(startX + barSpacing, canvas.height - height - 30, barWidth, height);
+
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillText('Signal', startX + barSpacing + barWidth / 2, canvas.height - 10);
+            ctx.fillText(`${avgSignal.toFixed(1)}μs`, startX + barSpacing + barWidth / 2, canvas.height - height - 35);
+        }
+
+        // Process communication
+        if (this.timingData.processComm.length > 0) {
+            const avgProcess = this.timingData.processComm.reduce((a, b) => a + b) / this.timingData.processComm.length;
+            const height = (avgProcess / 1000) * maxHeight;
+
+            ctx.fillStyle = '#27ae60';
+            ctx.fillRect(startX + barSpacing * 2, canvas.height - height - 30, barWidth, height);
+
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillText('Process', startX + barSpacing * 2 + barWidth / 2, canvas.height - 10);
+            ctx.fillText(`${avgProcess.toFixed(1)}μs`, startX + barSpacing * 2 + barWidth / 2, canvas.height - height - 35);
         }
     }
 }
